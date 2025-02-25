@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Custom Video Widget
  * Description: Widget video tùy chỉnh cho Elementor.
- * Version: 1.0
+ * Version: 1.1
  * Author: Your Name
  */
 

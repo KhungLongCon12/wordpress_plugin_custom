@@ -18,12 +18,12 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
         return ['basic'];
     }
 
-    private function convert_youtube_url($url) {
-        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
-            return 'https://www.youtube.com/embed/' . $matches[1];
-        }
-        return $url;
-    }
+    // private function convert_youtube_url($url) {
+    //     if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
+    //         return 'https://www.youtube.com/embed/' . $matches[1];
+    //     }
+    //     return $url;
+    // }
 
     private function get_youtube_id($url) {
     if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
@@ -38,6 +38,19 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('Cấu hình Video', 'plugin-name'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+
+        $this->add_control(
+            'video_source',
+            [
+                'label'=> __('Nguồn Video','plugin-name'),
+                'type'=> \Elementor\Controls_Manager::SELECT,
+                'option'=> [
+                    'manual' => __('Nhập tay', 'plugin-name'),
+                    'category' => __('Lấy từ danh mục', 'plugin-name'),
+                ],
+                    'default'=> 'manual',
             ]
         );
 
@@ -72,13 +85,59 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
         ]
     );
 
+    $this->add_control(
+            'video_category',
+            [
+                'label' => __('Chọn Danh Mục', 'plugin-name'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'options' => $this->get_categories_list(),
+                'multiple' => false,
+                'condition' => [
+                    'video_source' => 'category',
+                ],
+            ]
+        );
+
         $this->end_controls_section();
+    }
+
+    private function get_categories_list() {
+        $categories = get_categories(['hide_empty' => false]);
+        $options = [];
+        foreach ($categories as $category) {
+            $options[$category->term_id] = $category->name;
+        }
+        return $options;
+    }
+
+    private function get_videos_from_category($category_id) {
+        $args = [
+            'post_type' => 'post',
+            'posts_per_page' => 3,
+            'cat' => $category_id,
+            'meta_query' => [
+                [
+                    'key' => 'video_url',
+                    'compare' => 'EXISTS',
+                ]
+            ],
+        ];
+        $query = new WP_Query($args);
+        $videos = [];
+
+        while ($query->have_posts()) {
+            $query->the_post();
+            $videos[] = get_field('video_url');
+        }
+        wp_reset_postdata();
+        return $videos;
     }
 
     protected function render() {
     wp_enqueue_script('custom-video-script', plugin_dir_url(__FILE__) . 'assets/script.js', ['jquery'], false, true);
     $settings = $this->get_settings_for_display();
     $video_width = $settings['video_width']['size'] . '%';
+    $video = [];
     ?>
 <div class="custom-video-container">
     <?php for ($i = 1; $i <= 3; $i++): 
