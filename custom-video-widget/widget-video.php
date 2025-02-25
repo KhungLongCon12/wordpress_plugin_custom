@@ -18,12 +18,12 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
         return ['basic'];
     }
 
-    // private function convert_youtube_url($url) {
-    //     if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
-    //         return 'https://www.youtube.com/embed/' . $matches[1];
-    //     }
-    //     return $url;
-    // }
+    private function convert_youtube_url($url) {
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1];
+        }
+        return $url;
+    }
 
     private function get_youtube_id($url) {
     if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
@@ -42,17 +42,30 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
         );
 
         $this->add_control(
-            'video_source',
-            [
-                'label'=> __('Nguồn Video','plugin-name'),
-                'type'=> \Elementor\Controls_Manager::SELECT,
-                'option'=> [
-                    'manual' => __('Nhập tay', 'plugin-name'),
-                    'category' => __('Lấy từ danh mục', 'plugin-name'),
-                ],
-                    'default'=> 'manual',
-            ]
-        );
+        'video_source',
+        [
+            'label' => __('Nguồn Video', 'plugin-name'),
+            'type' => \Elementor\Controls_Manager::SELECT,
+            'options' => [
+                'manual' => __('Nhập URL thủ công', 'plugin-name'),
+                'posts' => __('Lấy từ bài viết', 'plugin-name'),
+            ],
+            'default' => 'manual',
+        ]
+    );
+
+    $this->add_control(
+        'category',
+        [
+            'label' => __('Chọn danh mục bài viết', 'plugin-name'),
+            'type' => \Elementor\Controls_Manager::SELECT2,
+            'options' => $this->get_categories_list(),
+            'multiple' => false,
+            'condition' => [
+                'video_source' => 'posts',
+            ],
+        ]
+    );
 
         for ($i = 1; $i <= 3; $i++) {
             $this->add_control(
@@ -62,9 +75,24 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
                     'type' => \Elementor\Controls_Manager::TEXT,
                     'input_type' => 'url',
                     'placeholder' => __('Nhập URL video...', 'plugin-name'),
+                    'condition' => [
+                        'video_source'=> 'manual',
+                    ]
                 ]
             );
         }
+
+        $this->add_control(
+            'video_count',
+            [   
+                'label'=> __('Số video hiển thị', 'plugin_name'),
+                'type'=> \Elementor\Controls_Manager::NUMBER,
+                'min'=> 1,
+                'max' => 10,
+                'step' => 1,
+                'default' => 3,
+            ]
+        );
 
         $this->add_control(
         'video_width',
@@ -85,16 +113,35 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
         ]
     );
 
-    $this->add_control(
-            'video_category',
+        $this->add_control(
+            'play_icon',
             [
-                'label' => __('Chọn Danh Mục', 'plugin-name'),
-                'type' => \Elementor\Controls_Manager::SELECT2,
-                'options' => $this->get_categories_list(),
-                'multiple' => false,
-                'condition' => [
-                    'video_source' => 'category',
-                ],
+                'label' => __('Chọn icon', 'plugin-name'),
+                    'type'=> \Elementor\Controls_Manager::ICONS,
+                    'default'=> [
+                        'value'=> 'fas fa-play',
+                        'library' => 'solid',
+                    ],
+
+            ]
+        );
+
+         $this->add_control(
+            'icon_color',
+            [
+                'label' => __('Màu icon', 'plugin-name'),
+                    'type'=> \Elementor\Controls_Manager::COLOR,
+                    'default' => '#fff',
+            ]
+        );
+
+        
+         $this->add_control(
+            'thumbnail_bg',
+            [
+                'label' => __('Màu nền Thumbnail', 'plugin-name'),
+                    'type'=> \Elementor\Controls_Manager::COLOR,
+                    'default' => '#00000099',
             ]
         );
 
@@ -102,54 +149,73 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
     }
 
     private function get_categories_list() {
-        $categories = get_categories(['hide_empty' => false]);
-        $options = [];
-        foreach ($categories as $category) {
-            $options[$category->term_id] = $category->name;
+        $categories = get_categories();
+        $option = [];
+        foreach($categories as $category) {
+            $option[$category->term_id] = $category->name;
         }
-        return $options;
+        return $option;
     }
 
-    private function get_videos_from_category($category_id) {
-        $args = [
-            'post_type' => 'post',
-            'posts_per_page' => 3,
-            'cat' => $category_id,
-            'meta_query' => [
-                [
-                    'key' => 'video_url',
-                    'compare' => 'EXISTS',
-                ]
-            ],
-        ];
-        $query = new WP_Query($args);
-        $videos = [];
+    private function get_latest_videos($category_id) {
+    $args = [
+        'post_type'      => 'post',
+        'posts_per_page' => 3,
+        'category__in'   => [$category_id],
+        'meta_query'     => [
+            [
+                'key'     => 'video_url', // ACF hoặc custom field chứa link YouTube
+                'compare' => 'EXISTS',
+            ]
+        ]
+    ];
 
+    $query = new WP_Query($args);
+    $videos = [];
+
+    if ($query->have_posts()) {
         while ($query->have_posts()) {
             $query->the_post();
-            $videos[] = get_field('video_url');
+             $video_url = function_exists('get_field') ? get_field('video_url') : get_post_meta(get_the_ID(), 'video_url', true);
+       if (!empty($video_url)) {
+                $videos[] = $video_url;
+            }
         }
         wp_reset_postdata();
-        return $videos;
     }
+
+    return $videos;
+}
 
     protected function render() {
     wp_enqueue_script('custom-video-script', plugin_dir_url(__FILE__) . 'assets/script.js', ['jquery'], false, true);
     $settings = $this->get_settings_for_display();
     $video_width = $settings['video_width']['size'] . '%';
-    $video = [];
+    $video_url =[];
+    if ($settings['video_source'] === 'posts') {
+        $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
+        $limit = !empty($settings['video_count']) ? $settings['video_count'] : 3;
+        $video_urls = $this->get_latest_videos($category_id, $limit);
+    } else {
+        for ($i = 1; $i <= 3; $i++) {
+            $video_urls[] = esc_url($settings['video_url_' . $i]);
+        }
+    }
     ?>
 <div class="custom-video-container">
-    <?php for ($i = 1; $i <= 3; $i++): 
+    <?php for ($i = 1; $i <= !$limit; $i++): 
                 $video_url = esc_url($settings['video_url_' . $i]);
                 $video_id = $this->get_youtube_id($video_url);
                 if (!$video_id) continue;
                 ?>
     <div class="video-item" data-video="<?php echo $video_url; ?>">
         <!-- Hiển thị thumbnail -->
-        <div class="video-thumbnail"
-            style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg');">
-            <button class="play-btn"><i class="eicon-play"></i></button>
+        <div class="video-thumbnail" style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg'); background-color: 
+            <?php echo esc_attr($settings['thumbnail_bg']); ?>;">
+            <button class="play-btn">
+                <i class="<?php echo esc_attr($settings['play_icon']['value']); ?>"
+                    style="color: <?php echo esc_attr($settings['icon_color']); ?>;"></i>
+            </button>
         </div>
         <!-- Iframe ẩn đi -->
         <iframe class="custom-video hidden" src="https://www.youtube.com/embed/<?php echo $video_id; ?>?enablejsapi=1"

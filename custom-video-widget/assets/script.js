@@ -46,3 +46,16 @@ document.addEventListener("DOMContentLoaded", function () {
     backButton.classList.add("hidden");
   });
 });
+
+function updateThumbnailHeight() {
+  document.querySelectorAll(".video-thumbnail").forEach((thumbnail) => {
+    let width = thumbnail.offsetWidth; // Lấy chiều rộng thực tế
+    thumbnail.style.height = (width * 9) / 16 + "px"; // Tính chiều cao theo 16:9
+  });
+}
+
+// Gọi hàm khi tải trang
+document.addEventListener("DOMContentLoaded", updateThumbnailHeight);
+
+// Gọi lại khi thay đổi kích thước màn hình
+window.addEventListener("resize", updateThumbnailHeight);
