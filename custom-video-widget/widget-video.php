@@ -203,11 +203,10 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
     }
     ?>
 <div class="custom-video-container">
-    <?php for ($i = 1; $i <= !$limit; $i++): 
-                $video_url = esc_url($settings['video_url_' . $i]);
-                $video_id = $this->get_youtube_id($video_url);
-                if (!$video_id) continue;
-                ?>
+    <?php foreach ($video_urls as $video_url): 
+            $video_id = $this->get_youtube_id($video_url);
+            if (!$video_id) continue;
+        ?>
     <div class="video-item" data-video="<?php echo $video_url; ?>">
         <!-- Hiển thị thumbnail -->
         <div class="video-thumbnail" style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg'); background-color: 
@@ -222,7 +221,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             frameborder="0" allowfullscreen></iframe>
     </div>
 
-    <?php endfor; ?>
+    <?php endforeach; ?>
 </div>
 <div><button class="back-to-list">◀ Quay lại danh sách phát</button></div>
 <?php
