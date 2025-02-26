@@ -144,14 +144,18 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
 
     private function get_latest_videos($category_id, $limit = 3) {
     $args = [
-        'post_type'      => 'post',
-        'posts_per_page' => $limit,
-        'category__in'   => [$category_id],
+        // 'post_type'      => 'post',
+        // 'posts_per_page' => $limit,
+        // 'category__in'   => [$category_id],
+        'cat' => $category_id,
+        'posts_per_page' => 10,
+        'post_status' => 'publish',
+        'post_type' => 'post',
+        'orderby' => 'date',
     ];
 
     $query = new WP_Query($args);
-    // var_dump($query->posts);
-    $videos = [];
+    $videos_urls = [];
 
     if ($query->have_posts()) {
         while ($query->have_posts()) {
@@ -161,21 +165,33 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             if (function_exists('get_field')) {
                 $acf_video = get_field('video_url');
                 if (!empty($acf_video)) {
-                    $videos[] = esc_url($acf_video);
+                    $videos_urls[] = esc_url($acf_video);
                     continue;
                 }
             }
             
             $content = get_the_content();
-            preg_match('/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $content, $matches);
+            preg_match_all('/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $content, $matches);
             if (!empty($matches[0])) {
-                $videos[] = esc_url($matches[0]);
+                foreach ($matches[0] as $url) {
+                    if ($this->is_video_url($url)) {
+                        $videos_urls[] = esc_url($url);
+                    }        
+                }
+            }
+            if (count($videos_urls) >= $limit) {
+                break;
             }
         }
-        wp_reset_postdata();
     }
-    return $videos;
+    wp_reset_postdata();
+    return !empty($videos_urls) ? array_slice($videos_urls, 0, $limit) : [];
 }
+
+    private function is_video_url($url) {
+    return preg_match('/(youtube\.com|youtu\.be|vimeo\.com|\.mp4|\.webm)/', $url);
+}
+
 
 protected function render() {
     wp_enqueue_script('custom-video-script', plugin_dir_url(__FILE__) . 'assets/script.js', ['jquery'], false, true); // check có chay file JS này hay không
@@ -187,6 +203,10 @@ protected function render() {
     $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
     $limit = !empty($settings['video_count']['size']) ? $settings['video_count']['size'] : 3;
     $video_urls = $this->get_latest_videos($category_id, $limit);
+    if(empty($video_urls)) {
+        echo '<p>' . __('Không có video nào để hiển thị.', 'plugin-name') . '</p>';
+        return;
+    }
 } elseif ($settings['video_source'] === 'ACF') {
     if (function_exists('get_field')) {
         $acf_videos = get_field('acf_video_urls');
@@ -201,7 +221,6 @@ protected function render() {
         }
     }
 }
-
     if (empty($video_urls)) {
         echo '<p>' . __('Không có video nào để hiển thị.', 'plugin-name') . '</p>';
         return;
