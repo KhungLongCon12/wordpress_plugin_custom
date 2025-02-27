@@ -11,18 +11,11 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
     }
 
     public function get_icon() {
-        return 'eicon-video-camera';
+        return 'eicon-play';
     }
 
     public function get_categories() {
         return ['basic'];
-    }
-
-    private function convert_youtube_url($url) {
-        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
-            return 'https://www.youtube.com/embed/' . $matches[1];
-        }
-        return $url;
     }
 
     private function get_youtube_id($url) {
@@ -33,14 +26,14 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
 }
 
     protected function _register_controls() {
+        //TAB 1 CONTENT
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __('Cấu hình Video', 'plugin-name'),
+                'label' => __('Cấu hình video', 'plugin-name'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
-
 
         $this->add_control(
         'video_source',
@@ -50,7 +43,6 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             'options' => [
                 'manual' => __('Nhập URL thủ công', 'plugin-name'),
                 'posts' => __('Lấy từ bài viết', 'plugin-name'),
-                'ACF'=> __('Lấy từ ACF ','plugin-name'),
             ],
             'default' => 'manual',
         ]
@@ -69,8 +61,78 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
         ]
     );
 
-        $repeater = new \Elementor\Repeater();
+    // Hiển thị thông tin bài viết
+        $this->add_control(
+            'show_title',
+            [
+                'label' => __( 'Show Title', 'text-domain' ),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'default' => 'yes',
+                'condition' => [ 'video_source' => 'posts' ],
+            ]
+        );
 
+        $this->add_control(
+            'title_limit',
+            [
+                'label' => __( 'Title Character Limit', 'text-domain' ),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'min' => 0,
+                'step' => 1,
+                'default' => 25,
+                'condition' => [ 'video_source' => 'posts' ],
+            ]
+        );
+
+        $this->add_control(
+            'title_prefix',
+            [
+                'label' => __( 'Title Prefix', 'text-domain' ),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'condition' => [ 'video_source' => 'posts' ],
+            ]
+        );
+
+        $this->add_control(
+            'title_suffix',
+            [
+                'label' => __( 'Title Suffix', 'text-domain' ),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'condition' => [ 'video_source' => 'posts' ],
+            ]
+        );
+
+        $this->add_control(
+            'show_meta',
+            [
+                'label' => __( 'Show Meta', 'text-domain' ),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'default' => 'yes',
+                'condition' => [ 'video_source' => 'posts' ],
+            ]
+        );
+
+        $this->add_control(
+            'show_author',
+            [
+                'label' => __( 'Show Author', 'text-domain' ),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'default' => 'yes',
+                'condition' => [ 'show_meta' => 'yes' ],
+            ]
+        );
+
+        $this->add_control(
+            'show_date',
+            [
+                'label' => __( 'Show Date', 'text-domain' ),
+                'type' => \Elementor\Controls_Manager::SWITCHER,
+                'default' => 'yes',
+                'condition' => [ 'show_meta' => 'yes' ],
+            ]
+        );
+
+        $repeater = new \Elementor\Repeater();
         $repeater->add_control(
             'video_url',
             [
@@ -97,7 +159,6 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             ]
         );
 
-
         $this->add_control(
             'play_icon',
             [
@@ -111,7 +172,28 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             ]
         );
 
-         $this->add_control(
+        //Nút quay lại custom
+        $this->add_control(
+            'back_to_list',
+            [
+                'label' => __('Nút quay lại', 'plugin-name'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'input_type' => 'text',
+                'default' => '◀ Quay lại danh sách phát',
+            ]
+        );
+        $this->end_controls_section();
+
+        //TAB 2 STYLE
+        $this->start_controls_section(
+            'style_section',
+            [
+                'label' => __('Kiểu hiển thị', 'plugin-name'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->add_control(
             'icon_color',
             [
                 'label' => __('Màu icon', 'plugin-name'),
@@ -120,7 +202,6 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             ]
         );
 
-        
          $this->add_control(
             'thumbnail_bg',
             [
@@ -130,7 +211,84 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             ],
         );
 
-        $this->end_controls_section();
+       $this->add_control(
+        'title_color',
+        [
+            'label' => __( 'Title Color', 'text-domain' ),
+            'type' => \Elementor\Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .custom-video-title' => 'color: {{VALUE}};',
+            ],
+            'condition' => [
+                'show_title' => 'yes',
+            ],
+        ]
+    );
+
+    $this->add_group_control(
+        \Elementor\Group_Control_Typography::get_type(),
+        [
+            'name' => 'title_typography',
+            'selector' => '{{WRAPPER}} .custom-video-title',
+            'condition' => [
+                'show_title' => 'yes',
+            ],
+        ]
+    );
+
+    $this->end_controls_section(); // Kết thúc Title Style
+
+    // Tab 3: Meta Styling
+    $this->start_controls_section(
+        'section_meta_style',
+        [
+            'label' => __( 'Meta Information', 'text-domain' ),
+            'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            'condition' => [
+                'show_meta' => 'yes',
+            ],
+        ]
+    );
+
+    $this->add_control(
+        'author_color',
+        [
+            'label' => __( 'Author Color', 'text-domain' ),
+            'type' => \Elementor\Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .custom-video-author' => 'color: {{VALUE}};',
+            ],
+        ]
+    );
+
+    $this->add_group_control(
+        \Elementor\Group_Control_Typography::get_type(),
+        [
+            'name' => 'author_typography',
+            'selector' => '{{WRAPPER}} .custom-video-author',
+        ]
+    );
+
+    $this->add_control(
+        'date_color',
+        [
+            'label' => __( 'Date Color', 'text-domain' ),
+            'type' => \Elementor\Controls_Manager::COLOR,
+            'selectors' => [
+                '{{WRAPPER}} .custom-video-date' => 'color: {{VALUE}};',
+            ],
+        ]
+    );
+
+    $this->add_group_control(
+        \Elementor\Group_Control_Typography::get_type(),
+        [
+            'name' => 'date_typography',
+            'selector' => '{{WRAPPER}} .custom-video-date',
+        ]
+    );
+
+    $this->end_controls_section(); // Kết thúc Meta Style
     }
 
     private function get_categories_list() {
@@ -144,11 +302,8 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
 
     private function get_latest_videos($category_id, $limit = 3) {
     $args = [
-        // 'post_type'      => 'post',
-        // 'posts_per_page' => $limit,
-        // 'category__in'   => [$category_id],
         'cat' => $category_id,
-        'posts_per_page' => 10,
+        'posts_per_page' => $limit,
         'post_status' => 'publish',
         'post_type' => 'post',
         'orderby' => 'date',
@@ -160,6 +315,13 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
     if ($query->have_posts()) {
         while ($query->have_posts()) {
             $query->the_post();
+
+            $post_data = [
+                'title' => get_the_title(),
+                'date' => get_the_date(),
+                'author' => get_the_author(),
+                'video_url' => '',
+            ];
 
             //Kiểm tra xem có sử dụng ACF không 
             if (function_exists('get_field')) {
@@ -184,7 +346,9 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             }
         }
     }
+    
     wp_reset_postdata();
+    
     return !empty($videos_urls) ? array_slice($videos_urls, 0, $limit) : [];
 }
 
@@ -231,27 +395,29 @@ protected function render() {
         <?php foreach ($video_urls as $video_url): 
                 $video_id = $this->get_youtube_id($video_url);
                 if (!$video_id) continue;
+                
             ?>
         <div class="video-item" data-video="<?php echo $video_url; ?>">
             <!-- Hiển thị thumbnail -->
             <div class="video-thumbnail" style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg'); background-color: 
                     <?php echo esc_attr($settings['thumbnail_bg']); ?>;">
-                <button class="play-btn">
+                <button type="button" aria-label="Play Video" class="play-btn">
                     <i class="<?php echo esc_attr($settings['play_icon']['value']); ?> "
                         style="color: <?php echo esc_attr($settings['icon_color']); ?>;">
                     </i>
                 </button>
             </div>
             <!-- Iframe ẩn đi -->
-            <iframe class="custom-video hidden"
+            <iframe class="custom-video hidden" aria-label="Video Player"
                 src="https://www.youtube.com/embed/<?php echo $video_id; ?>?enablejsapi=1" frameborder="0"
                 allowfullscreen>
             </iframe>
         </div>
         <?php endforeach; ?>
     </div>
-    <button type="button" class="back-to-list" data-widget-id="<?php echo esc_attr($widget_id); ?>">
-        ◀ Quay lại danh sách phát
+    <button type="button" aria-label="Back To List" class="back-to-list"
+        data-widget-id="<?php echo esc_attr($widget_id); ?>">
+        <?php echo esc_html($settings['back_to_list']); ?>
     </button>
 </section>
 <?php
