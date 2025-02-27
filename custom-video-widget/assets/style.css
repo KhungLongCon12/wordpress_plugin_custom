@@ -71,8 +71,14 @@
   display: none;
 }
 
+.video-post-info {
+  text-align: left;
+  font-size: 12px;
+  color: #000;
+  padding: 10px;
+}
+
 .back-to-list {
-  font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;
   color: white;
   padding: 10px 0px 0px 0px;
