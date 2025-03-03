@@ -311,38 +311,48 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
     ];
 
     $query = new WP_Query($args);
-    $title_videos = [];
-    $videos_urls = [];
-
     $videos_data = [];
 
     if ($query->have_posts()) {
         while ($query->have_posts()) {
             $query->the_post();
-            
-            $post_data = [
-                'title' => get_the_title(),
-                'video_url' => '',
-            ];
+            $title = get_the_title();
+            $description = get_the_excerpt();
+            $video_urls = [];
+
             //Kiểm tra xem có sử dụng ACF không 
-            if (function_exists('get_field')) {
-                $acf_video = get_field('video_url');
+            if (function_exists('get_field')) { 
+                $acf_video = get_field('acf_youtube_video');
                 if (!empty($acf_video)) {
-                    $videos_urls[] = esc_url($acf_video);
+                    $video_urls[] = esc_url($acf_video);
                     continue;
                 }
             }
+
+            //Nếu không có video từ ACF thì lấy video từ bài viết
             $content = get_the_content();
             preg_match_all('/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $content, $matches);
-            if (!empty($matches[0])) {
-                foreach ($matches[0] as $url) {
-                    if ($this->is_video_url($url)) {
-                        $title_videos[] = $post_data['title'];
-                        $videos_urls[] = esc_url($url);
-                    }        
+            if (empty($video_urls)) {
+                if (!empty($matches[0])) {
+                    foreach ($matches[0] as $url) {
+                        if ($this->is_video_url($url)) {
+                            $video_urls[] = esc_url($url);
+                        }        
+                    }
                 }
             }
-            if (count($videos_urls) >= $limit) {
+
+            //Nếu có URL hợp lệ, thêm vào danh sách
+            if (!empty($video_urls)) {
+                $videos_data[] = [
+                    'title'=> $title,
+                    'description'=> $description,
+                    'url'=> $video_urls,
+                ];
+            }
+
+            //Nếu đã đủ số lượng video thì thoát vòng lặp
+            if (count($video_urls) >= $limit) {
                 break;
             }
         }
@@ -350,7 +360,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
     
     wp_reset_postdata();
     
-    return !empty($videos_urls) ? array_slice($videos_urls, 0, $limit) : [];
+    return !empty($videos_data) ? array_slice($videos_data, 0, $limit) : [];
 }
 
 //Kiểm tra phải Video từ youtube không
@@ -361,46 +371,76 @@ protected function render() {
     wp_enqueue_script('custom-video-script', plugin_dir_url(__FILE__) . 'assets/script.js', ['jquery'], false, true); // check có chay file JS này hay không
     $settings = $this->get_settings_for_display();
     $widget_id = $this->get_id();
-    $video_urls = [];
-    $title_videos = [];
+    $videos_data = [];
 
     // Lấy video từ bài viết
     if ($settings['video_source'] === 'posts') {
     $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
     $limit = !empty($settings['video_count']['size']) ? $settings['video_count']['size'] : 3;
-    $video_urls = $this->get_latest_videos($category_id, $limit);
+    $videos_data = $this->get_latest_videos($category_id, $limit);
+
+    echo '<pre>';
+    print_r($videos_data);
+    echo '</pre>';
     
-    
-    if(empty($video_urls)) {
+    if(empty($videos_data)) {
         echo '<p>' . __('Không có video nào để hiển thị.', 'plugin-name') . '</p>';
         return;
     }
-} elseif ($settings['video_source'] === 'ACF') {
-    if (function_exists('get_field')) {
-        $acf_videos = get_field('acf_video_urls');
-        if (!empty($acf_videos) && is_array($acf_videos)) {
-            $video_urls = array_map('esc_url', $acf_videos);
+    } elseif ($settings['video_source'] === 'ACF') {
+        if (function_exists('get_field')) {
+            $acf_videos = get_field('acf_video_urls');
+            if (!empty($acf_videos)) {
+                //Nếu ACF lưu nhiều video (Repeater Field or Array [])
+                if (is_array($acf_videos))
+                {
+                    foreach ($acf_videos as $acf_video) {
+                        if(!empty($acf_video)){
+                            $videos_data[] = [
+                                'title' => '', // Không có tiêu đề từ ACF
+                                'description' => '', // Không có mô tả từ ACF
+                                'video_url' => esc_url($acf_video),
+                            ];
+                        }
+                    }
+                } else {
+                    // Nếu ACF chỉ lưu 1 URL duy nhất
+                    $videos_data[] = [
+                        'title' => '', // Không có tiêu đề từ ACF
+                        'description' => '', // Không có mô tả từ ACF
+                        'video_url' => esc_url($acf_videos),
+                    ];
+                }
+            }
+        }
+    } else {
+        if (!empty($settings['video_list']) && is_array($settings['video_list'])) {
+            foreach ($settings['video_list'] as $video) {
+                if(!empty($video['video'])) {
+                    $videos_data[] = [
+                        'title'=> !empty($video['title']) ? $video['title'] : '',
+                        'description'=> !empty($video['description']) ? $video['description'] : '',
+                        'video_url'=> esc_url($video['video_url']),
+                    ];
+                }
+            }
         }
     }
-} else {
-    if (!empty($settings['video_list']) && is_array($settings['video_list'])) {
-        foreach ($settings['video_list'] as $video) {
-            $video_urls[] = esc_url($video['video_url']);
-        }
-    }
-}
-    if (empty($video_urls)) {
+    //Kiểm tra xem có video nào không
+    if (empty($videos_data)) {
         echo '<p>' . __('Không có video nào để hiển thị.', 'plugin-name') . '</p>';
         return;
     }
     ?>
+
+<!--Render widget -->
 <section id="widget-video-<?php echo esc_attr($widget_id); ?>" class="widget-video">
     <div class="custom-video-container" data-widget-id="<?php echo esc_attr($widget_id); ?>">
-        <?php foreach ($video_urls as $video_url): 
-                $video_id = $this->get_youtube_id($video_url);
-                if (!$video_id) continue;
-            ?>
-        <div class="video-item" data-video="<?php echo $video_url; ?>">
+        <?php foreach ($videos_data as $video): 
+                    $video_id = $this->get_youtube_id($video['video_url']);
+                    if (!$video_id) continue;
+                ?>
+        <div class="video-item" data-video="<?php echo $video['video_url']; ?>">
             <!-- Hiển thị thumbnail -->
             <div class="video-thumbnail"
                 style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg');">
@@ -412,7 +452,7 @@ protected function render() {
                 <div class="overlay"></div>
                 <p
                     class="video-post-info <?php echo (!empty($settings['show_title']) && $settings['show_title'] === 'yes') ? 'video-title' : 'hidden'; ?>">
-                    <?php echo $video_url ?>
+                    <?php echo esc_html( $video['title'] ); ?>
                 </p>
             </div>
             <!-- Iframe ẩn đi -->
