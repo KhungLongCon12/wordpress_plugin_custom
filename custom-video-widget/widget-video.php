@@ -19,10 +19,16 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
     }
 
     private function get_youtube_id($url) {
-    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
-        return $matches[1];
+    // if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
+    //     return $matches[1];
+    // }
+    // return '';
+    if (is_array($url)) {
+        return ''; // Trả về chuỗi rỗng thay vì tiếp tục xử lý
     }
-    return '';
+    preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $matches);
+    
+    return $matches[1] ?? '';
 }
 
     protected function _register_controls() {
@@ -187,7 +193,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
                 'label' => __('Màu nền Thumbnail', 'plugin-name'),
                     'type'=> \Elementor\Controls_Manager::COLOR,
                     'default' => '#00000099',
-            ],
+            ]
         );
         $this->end_controls_section(); // End Display Advanced Styling Options
         
@@ -309,7 +315,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
         return $option;
     }
 
-    private function get_latest_videos($category_id, $limit = 3) {
+    private function get_latest_videos($category_id, $limit = 10) {
     $args = [
         'cat' => $category_id,
         'posts_per_page' => $limit,
@@ -391,10 +397,10 @@ protected function render() {
 
     // Lấy video từ bài viết
     if ($settings['video_source'] === 'posts') {
-    $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
-    $limit = !empty($settings['video_count']['size']) ? $settings['video_count']['size'] : 3;
-    $videos_data = $this->get_latest_videos($category_id, $limit);
-    
+        $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
+        $limit = !empty($settings['video_count']['size']) ? $settings['video_count']['size'] : 3;
+        $videos_data = $this->get_latest_videos($category_id, $limit);
+        
     if(empty($videos_data)) {
         echo '<p>' . __('Không có video nào để hiển thị.', 'plugin-name') . '</p>';
         return;
