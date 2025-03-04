@@ -80,7 +80,10 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
                 'min' => 0,
                 'step' => 1,
                 'default' => 25,
-                'condition' => [ 'show_title' => 'yes' ],
+                'condition' => [ 
+                    'video_source'=> 'posts',
+                    'show_title' => 'yes' 
+                ],
             ]
         );
 
@@ -89,7 +92,10 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __( 'Title Prefix', 'plugin-name' ),
                 'type' => \Elementor\Controls_Manager::TEXT,
-                'condition' => [ 'show_title' => 'yes' ],
+                'condition' => [ 
+                    'video_source'=> 'posts',
+                    'show_title' => 'yes' 
+                ],
             ]
         );
 
@@ -98,13 +104,16 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __( 'Title Suffix', 'plugin-name' ),
                 'type' => \Elementor\Controls_Manager::TEXT,
-                'condition' => [ 'show_title' => 'yes' ],
+                'condition' => [ 
+                    'video_source'=> 'posts',
+                    'show_title' => 'yes' 
+                ],
             ]
         );
 
         $repeater = new \Elementor\Repeater();
         $repeater->add_control(
-            'video_url',
+            'list_url',
             [
                 'label' => __('URL Video', 'plugin-name'),
                 'type' => \Elementor\Controls_Manager::TEXT,
@@ -120,9 +129,9 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::REPEATER,
                 'fields' => $repeater->get_controls(),
                 'default'=> [
-                    ['video_url'=> 'https://youtu.be/aAO_Mw8f04A'], // Mặc định 1 video
+                    ['list_url'=> 'https://youtu.be/aAO_Mw8f04A'], // Mặc định 1 video
                 ],
-                'title_field' => '{{{ video_url }}}',
+                'title_field' => '{{{ list_url }}}',
                 'condition' => [
                     'video_source' => 'manual',
                 ],
@@ -135,10 +144,9 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
                 'label' => __('Chọn icon', 'plugin-name'),
                     'type'=> \Elementor\Controls_Manager::ICONS,
                     'default'=> [
-                        'value'=> 'fas fa-play',
+                        'value' => 'fas fa-play',
                         'library' => 'solid',
                     ],
-
             ]
         );
 
@@ -149,7 +157,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
                 'label' => __('Nút quay lại', 'plugin-name'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'input_type' => 'text',
-                'default' => '◀ Quay lại danh sách phát',
+                'default' => 'Quay lại danh sách phát',
             ]
         );
         $this->end_controls_section(); // End Content TAB 1
@@ -319,12 +327,19 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
             $title = get_the_title();
             $description = get_the_excerpt();
             $video_urls = [];
+            $video_lists = []; // Danh sách video từ bài viết
 
             //Kiểm tra xem có sử dụng ACF không 
             if (function_exists('get_field')) { 
-                $acf_video = get_field('acf_youtube_video');
+                $acf_video = get_field('youtube_video');
                 if (!empty($acf_video)) {
-                    $video_urls[] = esc_url($acf_video);
+                    $video_urls = esc_url($acf_video);
+                    $videos_data[] = [
+                        'title' => $title,
+                        'description' => $description,
+                        'url' => $video_urls,
+                        'list_url' => $video_lists,
+                    ];
                     continue;
                 }
             }
@@ -348,6 +363,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base {
                     'title'=> $title,
                     'description'=> $description,
                     'url'=> $video_urls,
+                    'list_url' => $video_lists,
                 ];
             }
 
@@ -378,10 +394,6 @@ protected function render() {
     $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
     $limit = !empty($settings['video_count']['size']) ? $settings['video_count']['size'] : 3;
     $videos_data = $this->get_latest_videos($category_id, $limit);
-
-    echo '<pre>';
-    print_r($videos_data);
-    echo '</pre>';
     
     if(empty($videos_data)) {
         echo '<p>' . __('Không có video nào để hiển thị.', 'plugin-name') . '</p>';
@@ -400,6 +412,7 @@ protected function render() {
                                 'title' => '', // Không có tiêu đề từ ACF
                                 'description' => '', // Không có mô tả từ ACF
                                 'video_url' => esc_url($acf_video),
+                                'list_url' => '',
                             ];
                         }
                     }
@@ -409,6 +422,7 @@ protected function render() {
                         'title' => '', // Không có tiêu đề từ ACF
                         'description' => '', // Không có mô tả từ ACF
                         'video_url' => esc_url($acf_videos),
+                        'list_url' => '',
                     ];
                 }
             }
@@ -416,13 +430,9 @@ protected function render() {
     } else {
         if (!empty($settings['video_list']) && is_array($settings['video_list'])) {
             foreach ($settings['video_list'] as $video) {
-                if(!empty($video['video'])) {
-                    $videos_data[] = [
-                        'title'=> !empty($video['title']) ? $video['title'] : '',
-                        'description'=> !empty($video['description']) ? $video['description'] : '',
-                        'video_url'=> esc_url($video['video_url']),
+                $videos_data[] = [
+                        'list_url'=> esc_url($video['list_url']),
                     ];
-                }
             }
         }
     }
@@ -437,10 +447,26 @@ protected function render() {
 <section id="widget-video-<?php echo esc_attr($widget_id); ?>" class="widget-video">
     <div class="custom-video-container" data-widget-id="<?php echo esc_attr($widget_id); ?>">
         <?php foreach ($videos_data as $video): 
-                    $video_id = $this->get_youtube_id($video['video_url']);
+                    // $video_id = $this->get_youtube_id($video['url']);
+                    // $video_url = $video['url'];
+                    $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
+                    $video_id = $this->get_youtube_id($video_url);
+                    $video_title = $video['title'];
                     if (!$video_id) continue;
-                ?>
-        <div class="video-item" data-video="<?php echo $video['video_url']; ?>">
+
+                    //Thêm prefix & suffix vào tiêu đề
+                    $video_title = (!empty($settings['title_prefix']) ? esc_html($settings['title_prefix']) . ' ' : '') 
+                                . $video_title 
+                                . (!empty($settings['title_suffix']) ? ' ' . esc_html($settings['title_suffix']) : '');
+                    //Giới hạn ký tự
+                    if (!empty($settings['title_limit']) && is_numeric($settings['title_limit'])) {
+                        $limit = (int) $settings['title_limit'];
+                        if (mb_strlen($video_title, 'UTF-8') > $limit) {
+                            $video_title = mb_substr($video_title, 0, $limit, 'UTF-8') . '...';
+                        }
+                    }
+        ?>
+        <div class="video-item" data-video="<?php echo $video_url; ?>">
             <!-- Hiển thị thumbnail -->
             <div class="video-thumbnail"
                 style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg');">
@@ -452,7 +478,7 @@ protected function render() {
                 <div class="overlay"></div>
                 <p
                     class="video-post-info <?php echo (!empty($settings['show_title']) && $settings['show_title'] === 'yes') ? 'video-title' : 'hidden'; ?>">
-                    <?php echo esc_html( $video['title'] ); ?>
+                    <?php echo esc_html($video_title ); ?>
                 </p>
             </div>
             <!-- Iframe ẩn đi -->
