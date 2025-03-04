@@ -431,8 +431,11 @@ protected function render() {
         if (!empty($settings['video_list']) && is_array($settings['video_list'])) {
             foreach ($settings['video_list'] as $video) {
                 $videos_data[] = [
-                        'list_url'=> esc_url($video['list_url']),
-                    ];
+                    'title'=> '', // Không có tiêu đề
+                    'description'=> '', // Không có mô tả
+                    'url'=> '',
+                    'list_url'=> esc_url($video['list_url']),
+                ];
             }
         }
     }
