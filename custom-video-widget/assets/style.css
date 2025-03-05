@@ -1,5 +1,6 @@
 .widget-video {
-  padding: 20px 0px;
+  margin: 0px;
+  padding: 0px;
 }
 
 .custom-video-container {
@@ -14,7 +15,7 @@
   flex: 1;
   position: flex;
   cursor: relative;
-  transition: all 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
 .video-thumbnail {
@@ -31,18 +32,29 @@
 }
 
 .play-btn {
-  width: 54px;
-  height: 54px;
-  background: #00000099;
+  width: 50px; /* Điều chỉnh kích thước nút */
+  height: 50px;
+  background: rgba(0, 0, 0, 0.6); /* Màu nền bớt đục hơn */
   color: white;
   border: none;
-  border-radius: 50%;
-  font-size: 24px;
+  border-radius: 50%; /* Đảm bảo luôn tròn */
+  font-size: 20px; /* Giảm kích thước icon để vừa vặn */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
+  padding: 0; /* Xóa padding để icon không bị lệch */
+  line-height: 1; /* Tránh icon bị thưa quá */
+}
+
+.play-btn:hover {
+  background: rgba(0, 0, 0, 0.8); /* Hiệu ứng hover */
+  transform: scale(1.1); /* Phóng to nhẹ */
+}
+
+.play-btn i {
+  font-size: 24px; /* Giữ icon nhỏ hơn để không bị quá thưa */
 }
 
 .custom-video {
@@ -92,18 +104,13 @@
 }
 
 .back-to-list {
-  font-size: 12px;
-  color: white;
-  padding: 10px 0px 0px 0px;
-  background-color: transparent;
-  border: none;
   cursor: pointer;
   display: block;
+  width: inline;
 }
 
 .back-to-list:hover {
-  background-color: transparent;
-  color: #01cf6a;
+  color: var(--e-global-color-accent);
 }
 
 .hidden {
