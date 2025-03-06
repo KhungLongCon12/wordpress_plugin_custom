@@ -29,11 +29,33 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
 
     private function get_youtube_id($url)
     {
-        if (is_array($url)) {
-            return ''; // Trả về chuỗi rỗng thay vì tiếp tục xử lý
+        error_log("get_youtube_id: " . print_r($url, true));
+        // if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
+        //     return $matches[1];
+        // }
+        // return '';
+        // if (is_array($url)) {
+        //     return ''; // Trả về chuỗi rỗng thay vì tiếp tục xử lý
+        // }
+        // preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $matches);
+
+        // return $matches[1] ?? '';
+
+        // Nếu $url là mảng, lấy phần tử đầu tiên
+        if (is_array($url) && !empty($url)) {
+            $url = $url[0];
         }
+
+        // Kiểm tra lại xem $url có phải là chuỗi hợp lệ không
+        if (!is_string($url) || empty($url)) {
+            error_log("get_youtube_id: Invalid URL format - " . print_r($url, true));
+            return '';
+        }
+
+        // Sử dụng regex để lấy ID YouTube
         preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $matches);
 
+        // Trả về ID nếu tìm thấy, ngược lại trả về chuỗi rỗng
         return $matches[1] ?? '';
     }
 
@@ -563,9 +585,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                 }
             }
         }
-
         wp_reset_postdata();
-
         return !empty($videos_data) ? array_slice($videos_data, 0, $limit) : [];
     }
 
@@ -638,14 +658,17 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
         ?>
 
         <!--Render widget -->
-        <section id="widget-video-<?php echo esc_attr($widget_id); ?>" class="widget-video">
+        <section id="widget-video-<?php echo esc_attr($widget_id); ?>" class=" widget-video">
             <div class="custom-video-container" data-widget-id="<?php echo esc_attr($widget_id); ?>">
                 <?php foreach ($videos_data as $video):
-                    // $video_id = $this->get_youtube_id($video['url']);
-                    // $video_url = $video['url'];
                     $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
                     $video_id = $this->get_youtube_id($video_url);
                     $video_title = $video['title'];
+
+                    // echo '<pre>';
+                    // echo print_r($video_url, true);
+                    // echo '</pre>';
+        
                     if (!$video_id)
                         continue;
 
@@ -661,14 +684,13 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                         }
                     }
                     ?>
-                    <div class="video-item" data-video="<?php echo $video_url; ?>">
+                    <div class=" video-item" data-video="<?php echo $video_url; ?>">
                         <!-- Hiển thị thumbnail -->
-                        <div class="video-thumbnail"
+                        <div class=" video-thumbnail"
                             style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg');">
                             <button type="button" aria-label="Play Video" class="play-btn">
                                 <i class="<?php echo esc_attr($settings['play_icon']['value']); ?> "
-                                    style="color: <?php echo esc_attr($settings['icon_color']); ?>;">
-                                </i>
+                                    style=" color: <?php echo esc_attr($settings['icon_color']); ?>;"> </i>
                             </button>
                             <div class="overlay"></div>
                             <p
@@ -684,8 +706,8 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                     </div>
                 <?php endforeach; ?>
             </div>
-            <button type="button" aria-label="Back To List" class="back-to-list"
-                data-widget-id="<?php echo esc_attr($widget_id); ?>">
+            <button type="button" aria-label="Back To List" class="back-to-list" data-widget-id="
+            <?php echo esc_attr($widget_id); ?>">
                 <?php echo esc_html($settings['back_to_list']); ?>
             </button>
         </section>
