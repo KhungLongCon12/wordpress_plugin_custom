@@ -674,37 +674,35 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
         <!--Render widget -->
         <section id="widget-video-<?php echo esc_attr($widget_id); ?>"
             class=" widget-video <?php echo $layout === 'carousel' ? 'swiper-container' : ''; ?>">
-            <div class="custom-video-container swiper-container <?php echo $layout === 'carousel' ? 'swiper-wrapper' : ''; ?>"
-                data-widget-id="<?php echo esc_attr($widget_id); ?>">
-                <?php foreach ($videos_data as $video):
-                    $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
-                    $video_id = $this->get_youtube_id($video_url);
-                    $video_title = $video['title'];
+            <div class="custom-video-container <?php echo $layout === 'carousel' ? 'swiper-wrapper' : ''; ?>"
+                data-widget-id=" <?php echo esc_attr($widget_id); ?>"> <?php foreach ($videos_data as $video):
+                       $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
+                       $video_id = $this->get_youtube_id($video_url);
+                       $video_title = $video['title'];
 
-                    if (!$video_id)
-                        continue;
+                       if (!$video_id)
+                           continue;
 
-                    //Thêm prefix & suffix vào tiêu đề
-                    $video_title = (!empty($settings['title_prefix']) ? esc_html($settings['title_prefix']) . ' ' : '')
-                        . $video_title
-                        . (!empty($settings['title_suffix']) ? ' ' . esc_html($settings['title_suffix']) : '');
-                    //Giới hạn ký tự
-                    if (!empty($settings['title_limit']) && is_numeric($settings['title_limit'])) {
-                        $limit = (int) $settings['title_limit'];
-                        if (mb_strlen($video_title, 'UTF-8') > $limit) {
-                            $video_title = mb_substr($video_title, 0, $limit, 'UTF-8') . '...';
-                        }
-                    }
-                    ?>
+                       //Thêm prefix & suffix vào tiêu đề
+                       $video_title = (!empty($settings['title_prefix']) ? esc_html($settings['title_prefix']) . ' ' : '')
+                           . $video_title
+                           . (!empty($settings['title_suffix']) ? ' ' . esc_html($settings['title_suffix']) : '');
+                       //Giới hạn ký tự
+                       if (!empty($settings['title_limit']) && is_numeric($settings['title_limit'])) {
+                           $limit = (int) $settings['title_limit'];
+                           if (mb_strlen($video_title, 'UTF-8') > $limit) {
+                               $video_title = mb_substr($video_title, 0, $limit, 'UTF-8') . '...';
+                           }
+                       }
+                       ?>
                     <div class=" video-item <?php echo $layout === 'carousel' ? 'swiper-slide' : ''; ?>"
-                        data-video="<?php echo $video_url; ?>">
+                        data-video=" <?php echo $video_url; ?>">
                         <!-- Hiển thị thumbnail -->
                         <div class=" video-thumbnail"
                             style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg');">
                             <button type="button" aria-label="Play Video" class="play-btn">
                                 <i class="<?php echo esc_attr($settings['play_icon']['value']); ?> "
-                                    style=" color: <?php echo esc_attr($settings['icon_color']); ?>;"> </i>
-                            </button>
+                                    style=" color: <?php echo esc_attr($settings['icon_color']); ?>;"> </i> </button>
                             <div class="overlay"></div>
                             <p
                                 class="video-post-info <?php echo (!empty($settings['show_title']) && $settings['show_title'] === 'yes') ? 'video-title' : 'hidden'; ?>">

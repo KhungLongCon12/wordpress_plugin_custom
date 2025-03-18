@@ -142,3 +142,13 @@
     gap: 20px;
   }
 }
+
+.swiper-container {
+  width: 100%;
+  overflow: hidden; /* Đảm bảo không bị tràn */
+}
+
+.swiper-slide {
+  width: calc(100% / 3) !important; /* Mỗi slide chiếm đúng 1/3 carousel */
+  flex-shrink: 0; /* Ngăn Swiper co lại */
+}

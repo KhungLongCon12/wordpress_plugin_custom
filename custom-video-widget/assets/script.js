@@ -56,18 +56,17 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .querySelectorAll(".swiper-container")
     .forEach(function (swiperContainer) {
-      var swiper = new Swiper(swiperContainer, {
+      var swiper = new Swiper(".swiper-container", {
         slidesPerView: 3, // Luôn hiển thị 3 video
-        slidesPerGroup: 1, // Khi bấm nút chỉ dịch chuyển 1 video
-        spaceBetween: 10, // Khoảng cách giữa các video
-        loop: swiperContainer.dataset.loop === "yes",
-        pagination: {
-          el: ".swiper-pagination",
-          clickable: true,
-        },
+        slidesPerGroup: 1, // Chỉ dịch chuyển 1 video mỗi lần
+        loop: false, // Nếu muốn lặp vô hạn thì đặt true
         navigation: {
           nextEl: ".swiper-button-next",
           prevEl: ".swiper-button-prev",
+        },
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true,
         },
       });
     });
