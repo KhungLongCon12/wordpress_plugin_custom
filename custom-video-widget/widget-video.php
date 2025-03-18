@@ -29,32 +29,18 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
 
     private function get_youtube_id($url)
     {
-        error_log("get_youtube_id: " . print_r($url, true));
-        // if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]+)/', $url, $matches)) {
-        //     return $matches[1];
-        // }
-        // return '';
-        // if (is_array($url)) {
-        //     return ''; // Trả về chuỗi rỗng thay vì tiếp tục xử lý
-        // }
-        // preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $matches);
-
-        // return $matches[1] ?? '';
-
+        // error_log("get_youtube_id: " . print_r($url, true));
         // Nếu $url là mảng, lấy phần tử đầu tiên
         if (is_array($url) && !empty($url)) {
             $url = $url[0];
         }
-
         // Kiểm tra lại xem $url có phải là chuỗi hợp lệ không
         if (!is_string($url) || empty($url)) {
             error_log("get_youtube_id: Invalid URL format - " . print_r($url, true));
             return '';
         }
-
         // Sử dụng regex để lấy ID YouTube
         preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $matches);
-
         // Trả về ID nếu tìm thấy, ngược lại trả về chuỗi rỗng
         return $matches[1] ?? '';
     }
@@ -92,6 +78,33 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                 'multiple' => false,
                 'condition' => [
                     'video_source' => 'posts',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'video_layout',
+            [
+                'label' => __('Chọn kiểu hiển thị', 'plugin-name'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => [
+                    'grid' => __('Grid', 'plugin-name'),
+                    'carousel' => __('Carousel', 'plugin-name'),
+                ],
+                'default' => 'grid',
+            ]
+        );
+
+        $this->add_control(
+            'video_count',
+            [
+                'label' => __('Số lượng video:', 'pluugin-name'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'min' => 1,
+                'step' => 1,
+                'default' => 3,
+                'condition' => [
+                    'video_layout' => 'carousel',
                 ],
             ]
         );
@@ -225,7 +238,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'video_gap',
             [
                 'label' => __('Khoảng cách video', 'plugin-name'),
@@ -248,7 +261,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'video_padding',
             [
                 'label' => __('Padding Video', 'plugin-name'),
@@ -268,7 +281,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'video_margin',
             [
                 'label' => __('Margin Video', 'plugin-name'),
@@ -329,7 +342,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'padding',
             [
                 'label' => __('Padding', 'plugin-name'),
@@ -349,7 +362,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'margin',
             [
                 'label' => __('Margin', 'plugin-name'),
@@ -369,7 +382,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'title_alignment',
             [
                 'label' => __('Title Alignment', 'plugin-name'),
@@ -467,7 +480,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'padding_button',
             [
                 'label' => __('Padding', 'plugin-name'),
@@ -487,7 +500,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'margin_button',
             [
                 'label' => __('Margin', 'plugin-name'),
@@ -600,11 +613,12 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
         $settings = $this->get_settings_for_display();
         $widget_id = $this->get_id();
         $videos_data = [];
+        $layout = $settings['video_layout'];
 
         // Lấy video từ bài viết
         if ($settings['video_source'] === 'posts') {
             $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
-            $limit = !empty($settings['video_count']['size']) ? $settings['video_count']['size'] : 3;
+            $limit = !empty($settings['video_count']) ? $settings['video_count'] : 3;
             $videos_data = $this->get_latest_videos($category_id, $limit);
 
             if (empty($videos_data)) {
@@ -658,17 +672,15 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
         ?>
 
         <!--Render widget -->
-        <section id="widget-video-<?php echo esc_attr($widget_id); ?>" class=" widget-video">
-            <div class="custom-video-container" data-widget-id="<?php echo esc_attr($widget_id); ?>">
+        <section id="widget-video-<?php echo esc_attr($widget_id); ?>"
+            class=" widget-video <?php echo $layout === 'carousel' ? 'swiper-container' : ''; ?>">
+            <div class="custom-video-container swiper-container <?php echo $layout === 'carousel' ? 'swiper-wrapper' : ''; ?>"
+                data-widget-id="<?php echo esc_attr($widget_id); ?>">
                 <?php foreach ($videos_data as $video):
                     $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
                     $video_id = $this->get_youtube_id($video_url);
                     $video_title = $video['title'];
 
-                    // echo '<pre>';
-                    // echo print_r($video_url, true);
-                    // echo '</pre>';
-        
                     if (!$video_id)
                         continue;
 
@@ -684,7 +696,8 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                         }
                     }
                     ?>
-                    <div class=" video-item" data-video="<?php echo $video_url; ?>">
+                    <div class=" video-item <?php echo $layout === 'carousel' ? 'swiper-slide' : ''; ?>"
+                        data-video="<?php echo $video_url; ?>">
                         <!-- Hiển thị thumbnail -->
                         <div class=" video-thumbnail"
                             style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg');">
@@ -710,6 +723,12 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             <?php echo esc_attr($widget_id); ?>">
                 <?php echo esc_html($settings['back_to_list']); ?>
             </button>
+            <?php if ($layout === 'carousel'): ?>
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            <?php endif; ?>
+
         </section>
         <?php
     }

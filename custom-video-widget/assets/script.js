@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("Chạy thành công !!");
-
   document.querySelectorAll(".widget-video").forEach(function (videoContainer) {
     const backButton = videoContainer.querySelector(".back-to-list");
     const widgetID = videoContainer.querySelector(".custom-video-container")
@@ -54,6 +52,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  //Action for swiper
+  document
+    .querySelectorAll(".swiper-container")
+    .forEach(function (swiperContainer) {
+      var swiper = new Swiper(swiperContainer, {
+        slidesPerView: 3, // Luôn hiển thị 3 video
+        slidesPerGroup: 1, // Khi bấm nút chỉ dịch chuyển 1 video
+        spaceBetween: 10, // Khoảng cách giữa các video
+        loop: swiperContainer.dataset.loop === "yes",
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true,
+        },
+        navigation: {
+          nextEl: ".swiper-button-next",
+          prevEl: ".swiper-button-prev",
+        },
+      });
+    });
   // Hàm cập nhật chiều cao thumbnail theo tỷ lệ 16:9
   function updateThumbnailHeight() {
     document

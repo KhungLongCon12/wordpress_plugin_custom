@@ -22,6 +22,9 @@ function custom_video_assets()
 {
     wp_enqueue_style('custom-video-style', plugin_dir_url(__FILE__) . 'assets/style.css', [], time()); // Load CSS
     wp_enqueue_script('custom-video-script', plugin_dir_url(__FILE__) . 'assets/script.js', ['jquery'], time(), true); // Load JS
+    wp_enqueue_script('swiper-js', 'https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js', [], null, true);
+    wp_enqueue_style('swiper-css', 'https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css');
+
 }
 add_action('wp_enqueue_scripts', 'custom_video_assets');
 
