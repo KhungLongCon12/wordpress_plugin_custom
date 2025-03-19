@@ -1,15 +1,11 @@
 .widget-video {
   margin: 0px;
   padding: 0px;
-  position: relative;
-  overflow: hidden;
 }
 
 .custom-video-container {
   display: flex;
   flex-direction: row;
-  gap: 15px;
-  position: relative;
 }
 
 .swiper-container {
@@ -18,16 +14,20 @@
   position: relative;
   overflow-x: clip;
   overflow-y: visible;
+  overflow: visible;
 }
 
 .swiper-wrapper {
   display: flex;
   transition: transform 0.3s ease-in-out;
   will-change: transform;
+  width: 100% !important;
+  transform: translate3d(0);
 }
 
 .swiper-slide {
   flex: 0 0 calc(100% / 3);
+  max-width: calc(100% / 3);
   transition: opacity 0.3s ease, transform 0.3s ease;
   box-sizing: border-box;
 }
@@ -35,7 +35,6 @@
 .swiper-slide.swiper-hidden {
   opacity: 0;
   visibility: hidden;
-  position: relative;
 }
 
 .video-item {
@@ -157,6 +156,7 @@
   cursor: pointer;
   display: block;
   width: inline;
+  border: unset;
 }
 
 .back-to-list:hover {
