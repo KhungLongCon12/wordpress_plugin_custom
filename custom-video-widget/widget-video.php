@@ -98,7 +98,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
         $this->add_control(
             'video_count',
             [
-                'label' => __('Số lượng video:', 'pluugin-name'),
+                'label' => __('Số lượng video:', 'plugin-name'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'min' => 1,
                 'step' => 1,
@@ -621,6 +621,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
             $limit = !empty($settings['video_count']) ? $settings['video_count'] : 3;
             $videos_data = $this->get_latest_videos($category_id, $limit);
 
+
             if (empty($videos_data)) {
                 echo '<p>' . __('Không có video nào để hiển thị.', 'plugin-name') . '</p>';
                 return;
@@ -673,13 +674,12 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
 
         <!--Render widget -->
         <section id="widget-video-<?php echo esc_attr($widget_id); ?>"
-            class=" widget-video <?php echo $layout === 'carousel' ? 'swiper-container' : ''; ?>">
-            <div class="custom-video-container <?php echo $layout === 'carousel' ? 'swiper-wrapper' : ''; ?>"
+            class="<?php echo $layout === 'carousel' ? 'swiper-container widget-video ' : 'widget-video'; ?>">
+            <div class="<?php echo $layout === 'carousel' ? 'swiper-wrapper custom-video-container' : 'custom-video-container'; ?> "
                 data-widget-id=" <?php echo esc_attr($widget_id); ?>"> <?php foreach ($videos_data as $video):
                        $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
                        $video_id = $this->get_youtube_id($video_url);
                        $video_title = $video['title'];
-
                        if (!$video_id)
                            continue;
 
@@ -695,7 +695,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                            }
                        }
                        ?>
-                    <div class=" video-item <?php echo $layout === 'carousel' ? 'swiper-slide' : ''; ?>"
+                    <div class="<?php echo $layout === 'carousel' ? 'swiper-slide video-item' : 'video-item'; ?>"
                         data-video=" <?php echo $video_url; ?>">
                         <!-- Hiển thị thumbnail -->
                         <div class=" video-thumbnail"
@@ -717,16 +717,14 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php if ($layout === 'carousel'): ?>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            <?php endif; ?>
             <button type="button" aria-label="Back To List" class="back-to-list" data-widget-id="
             <?php echo esc_attr($widget_id); ?>">
                 <?php echo esc_html($settings['back_to_list']); ?>
             </button>
-            <?php if ($layout === 'carousel'): ?>
-                <div class="swiper-pagination"></div>
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
-            <?php endif; ?>
-
         </section>
         <?php
     }

@@ -1,18 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".widget-video").forEach(function (videoContainer) {
     const backButton = videoContainer.querySelector(".back-to-list");
-    const widgetID = videoContainer.querySelector(".custom-video-container")
-      .dataset.widgetId;
     const videoItems = videoContainer.querySelectorAll(".video-item");
-
-    console.log("videoItems", videoItems);
 
     if (!backButton) return;
     backButton.classList.add("hidden");
 
     videoItems.forEach(function (item) {
       item.addEventListener("click", function () {
-        console.log(`Click vào video: ${widgetID}`);
         // Ẩn tất cả video khác
         videoItems.forEach(function (list) {
           list.classList.remove("active");
@@ -40,7 +35,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     backButton.addEventListener("click", function () {
-      console.log(`Click vào nút back: ${widgetID}`);
       videoItems.forEach(function (list) {
         list.classList.remove("hidden", "active");
         list.querySelector(".custom-video").style.display = "none";
@@ -52,24 +46,40 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  //Action for swiper
+  // Action for swiper
   document
     .querySelectorAll(".swiper-container")
     .forEach(function (swiperContainer) {
-      var swiper = new Swiper(".swiper-container", {
-        slidesPerView: 3, // Luôn hiển thị 3 video
-        slidesPerGroup: 1, // Chỉ dịch chuyển 1 video mỗi lần
-        loop: false, // Nếu muốn lặp vô hạn thì đặt true
+      var swiper = new Swiper(swiperContainer, {
+        slidesPerView: 3,
+        slidesPerGroup: 1,
+        loop: false,
+        centeredSlides: false,
         navigation: {
-          nextEl: ".swiper-button-next",
-          prevEl: ".swiper-button-prev",
+          nextEl: swiperContainer.querySelector(".swiper-button-next"),
+          prevEl: swiperContainer.querySelector(".swiper-button-prev"),
         },
-        pagination: {
-          el: ".swiper-pagination",
-          clickable: true,
+        on: {
+          init: function () {
+            updateSlideVisibility(this);
+          },
+          slideChange: function () {
+            updateSlideVisibility(this);
+          },
         },
       });
     });
+
+  function updateSlideVisibility(swiper) {
+    swiper.slides.forEach((slide, index) => {
+      if (index >= swiper.activeIndex && index < swiper.activeIndex + 3) {
+        slide.classList.remove("swiper-hidden");
+      } else {
+        slide.classList.add("swiper-hidden");
+      }
+    });
+  }
+
   // Hàm cập nhật chiều cao thumbnail theo tỷ lệ 16:9
   function updateThumbnailHeight() {
     document

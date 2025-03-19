@@ -1,33 +1,83 @@
 .widget-video {
   margin: 0px;
   padding: 0px;
+  position: relative;
+  overflow: hidden;
 }
 
 .custom-video-container {
   display: flex;
   flex-direction: row;
   gap: 15px;
-  justify-content: center;
+  position: relative;
+}
+
+.swiper-container {
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.swiper-wrapper {
+  display: flex;
+  transition: transform 0.3s ease-in-out;
+  will-change: transform;
+}
+
+.swiper-slide {
+  flex: 0 0 calc(100% / 3);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-sizing: border-box;
+}
+
+.swiper-slide.swiper-hidden {
+  opacity: 0;
+  visibility: hidden;
   position: relative;
 }
 
 .video-item {
-  flex: 1;
-  position: flex;
-  cursor: relative;
+  flex: 0 0 calc(100% / 3);
+  min-width: 0;
+  cursor: pointer;
+  /* pointer-events: auto; */
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+/* Swiper navigation */
+.swiper-button-next,
+.swiper-button-prev {
+  position: absolute !important;
+  bottom: var(--swiper-navigation-bottom-offset, -30%) !important;
+  top: unset !important;
+}
+
+.swiper-button-next {
+  right: 10px;
+}
+
+.swiper-button-prev {
+  right: var(--swiper-navigation-sides-offset, 6%) !important;
+  left: auto !important;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .video-thumbnail {
   width: 100%;
   background-size: cover;
-  background-position: center center;
+  background-position: center;
   background-repeat: no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  border-radius: 5px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -65,12 +115,12 @@
 
 .video-item.active {
   width: 100%;
+  flex: 1;
 }
 
 .video-item.active .custom-video {
   display: block;
   width: 100%;
-  border: 10px;
 }
 
 .video-item.active .video-thumbnail {
@@ -141,14 +191,4 @@
     flex-direction: column;
     gap: 20px;
   }
-}
-
-.swiper-container {
-  width: 100%;
-  overflow: hidden; /* Đảm bảo không bị tràn */
-}
-
-.swiper-slide {
-  width: calc(100% / 3) !important; /* Mỗi slide chiếm đúng 1/3 carousel */
-  flex-shrink: 0; /* Ngăn Swiper co lại */
 }
