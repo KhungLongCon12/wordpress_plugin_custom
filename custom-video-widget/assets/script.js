@@ -53,23 +53,13 @@ document.addEventListener("DOMContentLoaded", function () {
       var swiper = new Swiper(swiperContainer, {
         slidesPerView: 3,
         slidesPerGroup: 1,
-        spaceBetween: 0,
-        loopAdditionalSlides: 3, // Đảm bảo Swiper không tạo quá nhiều bản sao
+        loop: false,
+        centeredSlides: false,
         navigation: {
           nextEl: swiperContainer.querySelector(".swiper-button-next"),
           prevEl: swiperContainer.querySelector(".swiper-button-prev"),
         },
         on: {
-          slideChangeTransitionEnd: function () {
-            console.log("Active Index:", this.activeIndex);
-            console.log("TranslateX:", this.translate);
-
-            // Ép translateX về đúng vị trí, tránh bị lệch
-            let expectedTranslateX =
-              -this.activeIndex * this.slides[0].offsetWidth;
-            this.setTranslate(expectedTranslateX);
-            console.log("Fixed TranslateX:", expectedTranslateX);
-          },
           init: function () {
             updateSlideVisibility(this);
           },

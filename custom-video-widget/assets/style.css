@@ -41,7 +41,7 @@
   transition: transform 0.3s ease-in-out;
   will-change: transform;
 }
-a .swiper-slide {
+.swiper-slide {
   flex: 0 0 calc(100% / 3);
   transition: opacity 0.3s ease, transform 0.3s ease;
   box-sizing: border-box;
@@ -172,7 +172,7 @@ a .swiper-slide {
 .back-to-list {
   cursor: pointer;
   display: block;
-  width: inline;
+  text-align: left;
 }
 
 .back-to-list:hover {
@@ -190,7 +190,7 @@ a .swiper-slide {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 676px) {
   .video-item {
     width: 100%;
   }
@@ -204,7 +204,30 @@ a .swiper-slide {
   }
 
   .custom-video-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Hai video hàng trên */
+    grid-template-rows: auto auto; /* Hai hàng */
+    gap: 10px;
+  }
+
+  .large-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .video-item:nth-child(3) {
+    grid-column: span 2; /* Trải dài cả hàng */
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-video-container {
+    display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
+  }
+
+  .video-item {
+    width: 100%;
   }
 }
