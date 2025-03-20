@@ -102,7 +102,7 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'min' => 1,
                 'step' => 1,
-                'default' => 3,
+                'default' => 4,
                 'condition' => [
                     'video_layout' => 'carousel',
                 ],
@@ -614,11 +614,10 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
         $widget_id = $this->get_id();
         $videos_data = [];
         $layout = $settings['video_layout'];
-
         // Lấy video từ bài viết
         if ($settings['video_source'] === 'posts') {
             $category_id = !empty($settings['category']) ? $settings['category'] : get_option('default_category');
-            $limit = !empty($settings['video_count']) ? $settings['video_count'] : 3;
+            $limit = !empty($settings['video_count']) ? $settings['video_count'] : 4;
             $videos_data = $this->get_latest_videos($category_id, $limit);
 
 
@@ -674,32 +673,58 @@ class Custom_Video_Widget extends \Elementor\Widget_Base
 
         <!--Render widget -->
         <section id="widget-video-<?php echo esc_attr($widget_id); ?>"
-            class="<?php echo $layout === 'carousel' ? 'swiper-container widget-video ' : 'widget-video'; ?>">
-            <div class="<?php echo $layout === 'carousel' ? 'swiper-wrapper custom-video-container' : 'custom-video-container'; ?> "
-                data-widget-id=" <?php echo esc_attr($widget_id); ?>"> <?php foreach ($videos_data as $video):
-                       $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
-                       $video_id = $this->get_youtube_id($video_url);
-                       $video_title = $video['title'];
-                       if (!$video_id)
-                           continue;
+            class="<?php echo $layout === 'carousel' ? 'swiper-container widget-video' : 'widget-video custom-layout'; ?>">
+            <!--Big Video (Featured)-->
+            <div class="featured-video">
+                <?php if (!empty($videos_data[0])):
+                    $video = $videos_data[0];
+                    $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
+                    $video_id = $this->get_youtube_id($video_url);
+                    $video_thumbnail_url = "https://img.youtube.com/vi/" . esc_attr($video_id) . "/maxresdefault.jpg";
+                    ?>
+                    <div class="video-item large-video" data-video="<?php echo esc_attr($video_url); ?>">
+                        <div class="video-thumbnail" style="background-image: url('<?php echo esc_url($video_thumbnail_url); ?>');">
+                            <button type="button" aria-label="Play Video" class="play-btn">
+                                <i class="<?php echo esc_attr($settings['play_icon']['value']); ?>"
+                                    style="color: <?php echo esc_attr($settings['icon_color']); ?>;"></i>
+                            </button>
+                            <div class="overlay"></div>
+                        </div>
+                        <iframe class="custom-video hidden"
+                            src="https://www.youtube.com/embed/<?php echo esc_attr($video_id); ?>?enablejsapi=1" frameborder="0"
+                            allowfullscreen></iframe>
+                    </div>
+                <?php endif; ?>
+            </div>
 
-                       //Thêm prefix & suffix vào tiêu đề
-                       $video_title = (!empty($settings['title_prefix']) ? esc_html($settings['title_prefix']) . ' ' : '')
-                           . $video_title
-                           . (!empty($settings['title_suffix']) ? ' ' . esc_html($settings['title_suffix']) : '');
-                       //Giới hạn ký tự
-                       if (!empty($settings['title_limit']) && is_numeric($settings['title_limit'])) {
-                           $limit = (int) $settings['title_limit'];
-                           if (mb_strlen($video_title, 'UTF-8') > $limit) {
-                               $video_title = mb_substr($video_title, 0, $limit, 'UTF-8') . '...';
-                           }
-                       }
-                       ?>
+            <!--List small Video-->
+            <div class="<?php echo $layout === 'carousel' ? 'swiper-wrapper custom-video-container' : 'custom-video-container'; ?>"
+                data-widget-id="<?php echo esc_attr($widget_id); ?>">
+                <?php foreach (array_slice($videos_data, 1, 3) as $video): ?>
+                    <?php
+                    $video_url = !empty($video['list_url']) ? $video['list_url'] : $video['url'];
+                    $video_id = $this->get_youtube_id($video_url);
+                    $video_title = $video['title'];
+                    $video_thumbnail_url = "https://img.youtube.com/vi/" . esc_attr($video_id) . "/maxresdefault.jpg";
+                    if (!$video_id)
+                        continue;
+                    //Thêm prefix & suffix vào tiêu đề
+                    $video_title = (!empty($settings['title_prefix']) ? esc_html($settings['title_prefix']) . ' ' : '')
+                        . $video_title
+                        . (!empty($settings['title_suffix']) ? ' ' . esc_html($settings['title_suffix']) : '');
+                    //Giới hạn ký tự
+                    if (!empty($settings['title_limit']) && is_numeric($settings['title_limit'])) {
+                        $limit = (int) $settings['title_limit'];
+                        if (mb_strlen($video_title, 'UTF-8') > $limit) {
+                            $video_title = mb_substr($video_title, 0, $limit, 'UTF-8') . '...';
+                        }
+                    }
+                    ?>
                     <div class="<?php echo $layout === 'carousel' ? 'swiper-slide video-item' : 'video-item'; ?>"
                         data-video=" <?php echo $video_url; ?>">
                         <!-- Hiển thị thumbnail -->
                         <div class=" video-thumbnail"
-                            style="background-image: url('https://img.youtube.com/vi/<?php echo $video_id; ?>/hqdefault.jpg');">
+                            style="background-image: url('<?php echo esc_url($video_thumbnail_url); ?>');">
                             <button type="button" aria-label="Play Video" class="play-btn">
                                 <i class="<?php echo esc_attr($settings['play_icon']['value']); ?> "
                                     style=" color: <?php echo esc_attr($settings['icon_color']); ?>;"> </i> </button>
